@@ -1,0 +1,26 @@
+version: 1
+
+AppDir:
+  path: ./AppDir
+
+  app_info:
+    id: com.carlos.mkwiisetup
+    name: setup
+    icon: setup
+    version: 1.0.0
+    exec: usr/bin/setup
+    exec_args: $@
+
+  files:
+    include: []
+    exclude:
+      - usr/share/man
+      - usr/share/doc
+
+  runtime:
+    env:
+      APPDIR: '$APPDIR'
+
+AppImage:
+  arch: x86_64
+  update-information: None

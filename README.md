@@ -4,7 +4,7 @@ A graphical installer (GTK3) for [WiiCompiled](https://github.com/patchzyy/Wiico
 
 ![demo](docs/demo.webp)
 
-### [To download, click here!](https://github.com/FlaipyTheHost/WiiDecompLinuxInstaller/releases/tag/v1.0.0)
+### [To download, click here!](https://github.com/FlaipyTheHost/WiiDecompLinuxInstaller/releases/latest)
 
 ## Why this project exists
 

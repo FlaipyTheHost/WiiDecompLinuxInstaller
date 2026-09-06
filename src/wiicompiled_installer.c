@@ -286,6 +286,16 @@ gpointer install_worker(gpointer data) {
     gchar *rm_temp_cmd = g_strdup_printf("rm -rf \"%s\"", temp_extract_dir);
     run_command(app, rm_temp_cmd);
 
+    const gchar *real_user = g_get_user_name();
+    gchar *config_path = g_strdup_printf("%s/.local/share/WiiCompiled/Config.toml", g_get_home_dir());
+    gchar *fix_config_cmd = g_strdup_printf(
+        "sed -i 's|/home/user/|/home/%s/|g' \"%s\"",
+        real_user, config_path
+    );
+    run_command(app, fix_config_cmd);
+    g_free(fix_config_cmd);
+    g_free(config_path);
+
     set_progress(app, 0.35, "Extracting game dump assets (ISO)...");
     gchar *wit_cmd = g_strdup_printf("\"%s\" extract \"%s\" \"%s\"", wit_binary, iso_path, temp_extract_dir);
     int wit_status = run_command(app, wit_cmd);

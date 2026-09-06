@@ -302,6 +302,7 @@ gpointer install_worker(gpointer data) {
     /* 3. Locate the DATA partition and move it into place */
     set_progress(app, 0.6, "Extracting game dump assets (ISO)...");
     gchar *source_data_dir = NULL;
+    gchar *fallback_dir = NULL;
     GDir *dir = g_dir_open(temp_extract_dir, 0, NULL);
 
     if (dir) {
@@ -312,14 +313,27 @@ gpointer install_worker(gpointer data) {
             gchar *files_test = g_build_filename(sub_dir, "files", NULL);
 
             if (g_file_test(sys_test, G_FILE_TEST_IS_DIR) && g_file_test(files_test, G_FILE_TEST_IS_DIR)) {
-                source_data_dir = g_strdup(sub_dir);
+                if (g_ascii_strcasecmp(name, "DATA") == 0) {
+                    g_free(sys_test);
+                    g_free(files_test);
+                    source_data_dir = sub_dir;
+                    break;
+                }
+                if (!fallback_dir) {
+                    fallback_dir = g_strdup(sub_dir);
+                }
             }
             g_free(sys_test);
             g_free(files_test);
             g_free(sub_dir);
-            if (source_data_dir) break;
         }
         g_dir_close(dir);
+    }
+
+    if (!source_data_dir) {
+        source_data_dir = fallback_dir;
+    } else {
+        g_free(fallback_dir);
     }
 
     if (!source_data_dir) {
@@ -639,7 +653,7 @@ static void browse_for_entry(AppData *app, GtkEntry *entry, const gchar *title,
                                                             gtk_grid_set_column_spacing(GTK_GRID(grid), 6);
                                                             gtk_box_pack_start(GTK_BOX(vbox), grid, FALSE, FALSE, 4);
 
-                                                            build_file_row(grid, 0, "Game ISO (required)", "Path to the game ISO...",
+                                                            build_file_row(grid, 0, "Game ISO (required) [Recommended md5sum: e7b1ff1fabb0789482ce2cb0661d986e]", "Path to the game ISO...",
                                                                            &app->iso_entry, G_CALLBACK(on_browse_iso_clicked), app);
 
                                                             build_file_row(grid, 3, "nand.bin (optional)", "Path to nand.bin...",

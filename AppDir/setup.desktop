@@ -1,0 +1,11 @@
+[Desktop Entry]
+X-AppImage-Arch=x86_64
+X-AppImage-Version=latest
+X-AppImage-Name=WiiCompiled Installer
+Name=WiiCompiled Installer
+Exec=usr/bin/setup
+Icon=setup
+Type=Application
+Terminal=false
+Categories=Utility;
+Comment=

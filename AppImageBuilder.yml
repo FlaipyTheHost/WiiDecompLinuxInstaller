@@ -7,7 +7,7 @@ AppDir:
     id: com.carlos.mkwiisetup
     name: setup
     icon: setup
-    version: 3.0.0
+    version: 3.0.1
     exec: usr/bin/setup
     exec_args: $@
 

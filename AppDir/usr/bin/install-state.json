@@ -1,0 +1,22 @@
+{
+  "SchemaVersion": 1,
+  "Workspace": "/home/user/.local/share/WiiCompiled/workspace",
+  "Products": [
+    {
+      "Profile": "base",
+      "InstallDirectory": "/home/user/.local/share/WiiCompiled/Install/Base",
+      "ExecutableName": "WiiCompiled",
+      "DolSha256": "80d18895b39c63bd80f457398bfcbb91b7d16ac116a41a88967e954080155b05",
+      "RelSha256": "16d9d146112541fefea701ecb5bc1a496f9d50e4a752fbb5b6778e7c6399f67d",
+      "BuiltUtc": "2026-09-06T11:20:19.2767890Z"
+    },
+    {
+      "Profile": "retro-rewind",
+      "InstallDirectory": "/home/user/.local/share/WiiCompiled/Install/RetroRewind",
+      "ExecutableName": "RetroRewind",
+      "DolSha256": "80d18895b39c63bd80f457398bfcbb91b7d16ac116a41a88967e954080155b05",
+      "RelSha256": "16d9d146112541fefea701ecb5bc1a496f9d50e4a752fbb5b6778e7c6399f67d",
+      "BuiltUtc": "2026-09-06T11:20:19.2777160Z"
+    }
+  ]
+}

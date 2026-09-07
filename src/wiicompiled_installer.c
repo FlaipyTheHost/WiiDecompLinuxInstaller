@@ -301,6 +301,18 @@ gpointer install_worker(gpointer data) {
     g_free(fix_config_cmd);
     g_free(config_path);
 
+    /* install-state.json ships with the same "/home/user/" placeholder
+     * baked into its InstallDirectory fields, so it needs the exact same
+     * treatment as Config.toml above. */
+    gchar *install_state_path = g_strdup_printf("%s/.local/share/WiiCompiled/install-state.json", g_get_home_dir());
+    gchar *fix_install_state_cmd = g_strdup_printf(
+        "sed -i 's|/home/user/|/home/%s/|g' \"%s\"",
+        real_user, install_state_path
+    );
+    run_command(app, fix_install_state_cmd);
+    g_free(fix_install_state_cmd);
+    g_free(install_state_path);
+
     /* 2b. Once Config.toml points at the right home directory, swap the
      * plain executable that came out of WiiCompiled_dist.zip for a
      * "real binary + wrapper" layout: rename the extracted "WiiCompiled"

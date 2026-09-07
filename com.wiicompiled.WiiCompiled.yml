@@ -1,0 +1,26 @@
+app-id: com.wiicompiled.WiiCompiled
+runtime: org.freedesktop.Platform
+runtime-version: '23.08'
+sdk: org.freedesktop.Sdk
+command: WiiCompiled
+
+finish-args:
+  - --socket=wayland
+  - --socket=fallback-x11
+  - --device=dri
+  - --socket=pulseaudio
+  - --filesystem=~/.local/share/WiiCompiled:create
+
+modules:
+  - name: wiicompiled
+    buildsystem: cmake-ninja
+    config-opts:
+      - -DCMAKE_BUILD_TYPE=Release
+    sources:
+      - type: dir
+        path: workspace
+    build-commands:
+      - install -Dm755 native-build/WiiCompiled /app/bin/WiiCompiled
+      - install -Dm755 native-build/wii_bootstrap /app/bin/wii_bootstrap
+      - install -Dm755 native-build/RetroRewind /app/bin/RetroRewind
+      - install -Dm644 native-build/dsp_coef.bin /app/share/wiicompiled/dsp_coef.bin

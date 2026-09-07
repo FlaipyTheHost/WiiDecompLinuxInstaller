@@ -3,7 +3,7 @@
 *.rvz
 keys.bin
 nand.bin
-*.zip
+WiiCompiled_dist.zip
 
 #Editors
 .vscode/

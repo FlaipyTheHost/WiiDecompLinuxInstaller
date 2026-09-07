@@ -52,8 +52,8 @@ static gchar *get_binary_dir(void) {
 /* When running as an AppImage, get_binary_dir() resolves to somewhere under
  * /tmp/.mount_XXXXXX/usr/bin — the squashfs mount point, which is READ-ONLY.
  * It's fine for locating bundled binaries/assets to read (wit,
- * bootmii_nand_import, WiiCompiled_dist.zip), but any directory we need to
- * write into must live somewhere real and writable instead. */
+ * bootmii_nand_import, WiiCompiled_dist.zip, libs.zip), but any directory we
+ * need to write into must live somewhere real and writable instead. */
 static gchar *get_writable_temp_dir(const gchar *name) {
     gchar *cache_root = g_build_filename(g_get_user_cache_dir(), "WiiCompiled", NULL);
     g_mkdir_with_parents(cache_root, 0755);
@@ -69,10 +69,15 @@ static gchar *get_wiicompiled_target_dir(void) {
 
 /* The actual game executable inside the installed tree — used both to
  * detect an existing install (Play button) and to launch it / point the
- * .desktop file at it. */
+ * .desktop file at it.
+ *
+ * NOTE: this used to point at ".../Install/Base/WiiCompiled", which does not
+ * match where the build actually lands. The real executable (and, after
+ * install_worker() unpacks libs.zip, the launcher wrapper that replaces it)
+ * lives at ".../workspace/native-build/WiiCompiled". */
 static gchar *get_install_check_path(void) {
     gchar *target_dir = get_wiicompiled_target_dir();
-    gchar *check_path = g_build_filename(target_dir, "Install", "Base", "WiiCompiled", NULL);
+    gchar *check_path = g_build_filename(target_dir, "workspace", "native-build", "WiiCompiled", NULL);
     g_free(target_dir);
     return check_path;
 }
@@ -295,6 +300,67 @@ gpointer install_worker(gpointer data) {
     run_command(app, fix_config_cmd);
     g_free(fix_config_cmd);
     g_free(config_path);
+
+    /* 2b. Once Config.toml points at the right home directory, swap the
+     * plain executable that came out of WiiCompiled_dist.zip for a
+     * "real binary + wrapper" layout: rename the extracted "WiiCompiled"
+     * to "WiiCompiled.bin", then unpack libs.zip (shipped next to
+     * WiiCompiled_dist.zip) on top of it. libs.zip is expected to bring
+     * the bundled shared libraries plus a launcher script/binary that is
+     * itself named "WiiCompiled" and knows how to exec WiiCompiled.bin
+     * with the right library path. Both the .desktop entry and the Play
+     * button keep launching get_install_check_path(), which still
+     * resolves to ".../workspace/native-build/WiiCompiled" — so once this
+     * step is done, both automatically pick up the new wrapper without
+     * any further changes. */
+    gchar *native_build_dir = g_build_filename(target_dir, "workspace", "native-build", NULL);
+    gchar *built_exe_path = g_build_filename(native_build_dir, "WiiCompiled", NULL);
+    gchar *built_exe_bin_path = g_build_filename(native_build_dir, "WiiCompiled.bin", NULL);
+
+    if (!g_file_test(built_exe_path, G_FILE_TEST_EXISTS)) {
+        set_progress(app, -1.0, "Error: WiiCompiled executable was not found after extracting the package.");
+        g_free(native_build_dir); g_free(built_exe_path); g_free(built_exe_bin_path);
+        g_free(binary_dir); g_free(target_dir); g_free(zip_path);
+        g_free(wit_binary); g_free(temp_extract_dir); g_free(assets_dir);
+        g_free(rm_temp_cmd);
+        return NULL;
+    }
+
+    set_progress(app, 0.28, "Preparing bundled libraries...");
+
+    gchar *mv_exe_cmd = g_strdup_printf("mv -f \"%s\" \"%s\"", built_exe_path, built_exe_bin_path);
+    run_command(app, mv_exe_cmd);
+    g_free(mv_exe_cmd);
+    chmod(built_exe_bin_path, 0755);
+
+    gchar *libs_zip_path = g_build_filename(binary_dir, "libs.zip", NULL);
+    if (!g_file_test(libs_zip_path, G_FILE_TEST_EXISTS)) {
+        g_free(libs_zip_path);
+        libs_zip_path = g_build_filename(target_dir, "libs.zip", NULL);
+    }
+
+    if (!g_file_test(libs_zip_path, G_FILE_TEST_EXISTS)) {
+        set_progress(app, -1.0, "Error: libs.zip was not found.");
+        g_free(libs_zip_path);
+        g_free(native_build_dir); g_free(built_exe_path); g_free(built_exe_bin_path);
+        g_free(binary_dir); g_free(target_dir); g_free(zip_path);
+        g_free(wit_binary); g_free(temp_extract_dir); g_free(assets_dir);
+        g_free(rm_temp_cmd);
+        return NULL;
+    }
+
+    gchar *unzip_libs_cmd = g_strdup_printf("unzip -o -q \"%s\" -d \"%s\"", libs_zip_path, native_build_dir);
+    run_command(app, unzip_libs_cmd);
+    g_free(unzip_libs_cmd);
+    g_free(libs_zip_path);
+
+    /* Whatever ended up named "WiiCompiled" after unpacking libs.zip
+     * (the wrapper) needs to be executable too. */
+    chmod(built_exe_path, 0755);
+
+    g_free(native_build_dir);
+    g_free(built_exe_path);
+    g_free(built_exe_bin_path);
 
     set_progress(app, 0.35, "Extracting game dump assets (ISO)...");
     gchar *wit_cmd = g_strdup_printf("\"%s\" extract \"%s\" \"%s\"", wit_binary, iso_path, temp_extract_dir);

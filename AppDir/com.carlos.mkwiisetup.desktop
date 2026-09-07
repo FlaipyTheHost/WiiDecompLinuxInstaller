@@ -1,6 +1,6 @@
 [Desktop Entry]
 X-AppImage-Arch=x86_64
-X-AppImage-Version=2.1.0
+X-AppImage-Version=3.0.0
 X-AppImage-Name=setup
 Name=setup
 Exec=usr/bin/setup
